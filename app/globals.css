@@ -1,0 +1,13 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #050a05; color: #e8ffe8; font-family: 'Space Mono', monospace; }
+input::placeholder { color: #2a3a2a; }
+input:focus { outline: none; border-color: #00ff87 !important; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #050a05; }
+::-webkit-scrollbar-thumb { background: #1a2a1a; border-radius: 2px; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)} }
+@keyframes scan { 0%{transform:translateY(-100%)}100%{transform:translateY(400%)} }
+.sim-slider { -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:2px; outline:none; cursor:pointer; }
+.sim-slider::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#00ff87; box-shadow:0 0 10px #00ff8780; cursor:pointer; }
+.sim-slider::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:#00ff87; cursor:pointer; border:none; }
