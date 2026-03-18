@@ -265,7 +265,7 @@ const ComparisonTable = ({ configs }: { configs: Result["configs"] }) => {
             <tr key={row.key} style={{ background: ri % 2 === 0 ? "#0a0f0a" : "transparent" }}>
               <td style={{ color: "#4a6a4a", padding: "7px 8px", fontSize: "10px" }}>{row.label}</td>
               {labels.map(l => {
-                const cfg = configs[l] as Record<string, unknown>;
+                const cfg = configs[l] as unknown as Record<string, unknown>;
                 const raw = cfg?.[row.key];
                 const val = raw != null ? (row.fmt ? row.fmt(raw as never) : raw) : "—";
                 const color = row.feeCol ? "#ff6644" : row.accent ? lc[l] : "#e8ffe8";
