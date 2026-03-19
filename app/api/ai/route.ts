@@ -5,18 +5,15 @@ export const runtime = "edge";
 // ── PROVIDER ADAPTERS ─────────────────────────────────────────────────────────
 
 async function callClaude(systemPrompt: string, userMsg: string, useSearch: boolean) {
+  // Use Haiku 4.5 for the best cost-to-intelligence ratio in 2026
+  const modelId = "claude-haiku-4-5-20251001"; 
+  
   const body: Record<string, unknown> = {
-    // 1. SWITCH TO HAIKU: ~10x cheaper than Sonnet for routine tasks
-    model: "claude-3-5-haiku-20241022", 
-    
-    // 2. LOWER MAX TOKENS: Prevents reserving expensive space and limits waste
-    max_tokens: 400, 
-    
+    model: modelId,
+    max_tokens: 400, // Tight limit to save costs
     system: systemPrompt,
     messages: [{ role: "user", content: userMsg }],
-    
-    // 3. ADD TEMPERATURE: Lower temperature (0) makes it more likely to stick to JSON
-    temperature: 0,
+    temperature: 0, // Keeps the math/JSON precise
   };
 
   if (useSearch) {
@@ -33,21 +30,18 @@ async function callClaude(systemPrompt: string, userMsg: string, useSearch: bool
     body: JSON.stringify(body),
   });
 
-  const data = await res.json() as any;
-
-  // Handle Overloaded/Rate Limit errors gracefully
   if (res.status === 529 || res.status === 429) {
-    throw new Error("Anthropic is currently overloaded. Please try Gemini or wait 60 seconds.");
+    throw new Error("Anthropic Overloaded. Switch to Gemini Flash-Lite for this round.");
   }
 
+  const data = await res.json() as any;
+  
   if (data.error) {
     throw new Error(data.error.message || "Claude API error");
   }
 
-  const content = data.content || [];
-  return content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
+  return data.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
 }
-
 async function callGemini(systemPrompt: string, userMsg: string, useSearch: boolean) {
   const body: Record<string, unknown> = {
     systemInstruction: { parts: [{ text: systemPrompt }] },
