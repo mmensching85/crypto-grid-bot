@@ -6,14 +6,23 @@ export const runtime = "edge";
 
 async function callClaude(systemPrompt: string, userMsg: string, useSearch: boolean) {
   const body: Record<string, unknown> = {
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 8192,
+    // 1. SWITCH TO HAIKU: ~10x cheaper than Sonnet for routine tasks
+    model: "claude-3-5-haiku-20241022", 
+    
+    // 2. LOWER MAX TOKENS: Prevents reserving expensive space and limits waste
+    max_tokens: 400, 
+    
     system: systemPrompt,
     messages: [{ role: "user", content: userMsg }],
+    
+    // 3. ADD TEMPERATURE: Lower temperature (0) makes it more likely to stick to JSON
+    temperature: 0,
   };
+
   if (useSearch) {
     body.tools = [{ type: "web_search_20250305", name: "web_search" }];
   }
+
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -23,12 +32,20 @@ async function callClaude(systemPrompt: string, userMsg: string, useSearch: bool
     },
     body: JSON.stringify(body),
   });
-  const data = await res.json() as Record<string, unknown>;
-  if ((data as { error?: { message?: string } }).error) {
-    throw new Error((data as { error: { message?: string } }).error.message || "Claude API error");
+
+  const data = await res.json() as any;
+
+  // Handle Overloaded/Rate Limit errors gracefully
+  if (res.status === 529 || res.status === 429) {
+    throw new Error("Anthropic is currently overloaded. Please try Gemini or wait 60 seconds.");
   }
-  const content = (data.content as Array<{ type: string; text?: string }>) || [];
-  return content.filter(b => b.type === "text").map(b => b.text || "").join("");
+
+  if (data.error) {
+    throw new Error(data.error.message || "Claude API error");
+  }
+
+  const content = data.content || [];
+  return content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
 }
 
 async function callGemini(systemPrompt: string, userMsg: string, useSearch: boolean) {
