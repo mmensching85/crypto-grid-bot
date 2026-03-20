@@ -418,19 +418,19 @@ export default function Home() {
   };
 
   const handleGoal = async () => {
-    if (!goalUSD || !goalDays) { setGoalError("Enter profit target and days."); return; }
-    setGoalError(null); setGoalLoading(true); setGoalResult(null);
-    try {
-      setGoalMsg("SCANNING MARKETS + CALCULATING CONFIGS...");
-      const data = await callAI(
-        GOAL_FINDER_PROMPT,
-        `Goal: $${goalUSD} USD profit in ${goalDays} days. Search for ranging altcoins and calculate grid configs to hit this target.`,
-        true
-      );
-      setGoalResult(data as Record<string, unknown>);
-    } catch (e) { setGoalError((e as Error).message); }
-    setGoalLoading(false);
-  };
+  if (!goalUSD || !goalDays) { setGoalError("Enter profit target and days."); return; }
+  setGoalError(null); setGoalLoading(true); setGoalResult(null);
+  try {
+    setGoalMsg("SCANNING MARKETS + CALCULATING CONFIGS...");
+    const data = await callAI(
+      GOAL_FINDER_PROMPT,
+      `Goal: $${goalUSD} USD profit in ${goalDays} days. Search for ranging altcoins and calculate grid configs to hit this target.`,
+      true
+    );
+    setGoalResult(data as Record<string, unknown>);
+  } catch (e) { setGoalError((e as Error).message); }
+  setGoalLoading(false);
+};
 
   const activeConfig = result?.configs?.[selectedRange?.label as keyof Result["configs"]] || null;
   const btnReady = form.coin.trim() && form.capital.trim() && !loading;
