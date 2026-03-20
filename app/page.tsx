@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import {
   PRICE_FETCH_PROMPT, CONFIG_GEN_PROMPT,
-  ALLOCATOR_PROMPT, GOAL_SCAN_PROMPT, GOAL_CONFIG_PROMPT,
+  ALLOCATOR_PROMPT, GOAL_FINDER_PROMPT,
 } from "@/lib/prompts";
 
 // ── TYPES ─────────────────────────────────────────────────────────────────────
@@ -265,7 +265,7 @@ const ComparisonTable = ({ configs }: { configs: Result["configs"] }) => {
             <tr key={row.key} style={{ background: ri % 2 === 0 ? "#0a0f0a" : "transparent" }}>
               <td style={{ color: "#4a6a4a", padding: "7px 8px", fontSize: "10px" }}>{row.label}</td>
               {labels.map(l => {
-                const cfg = configs[l] as unknown as Record<string, unknown>;
+                const cfg = configs[l] as Record<string, unknown>;
                 const raw = cfg?.[row.key];
                 const val = raw != null ? (row.fmt ? row.fmt(raw as never) : raw) : "—";
                 const color = row.feeCol ? "#ff6644" : row.accent ? lc[l] : "#e8ffe8";
@@ -421,15 +421,13 @@ export default function Home() {
     if (!goalUSD || !goalDays) { setGoalError("Enter profit target and days."); return; }
     setGoalError(null); setGoalLoading(true); setGoalResult(null);
     try {
-      setGoalMsg("SCANNING MARKETS + FETCHING LIVE PRICES...");
-      const scanData = await callAI(GOAL_SCAN_PROMPT, `Find 5-6 ranging crypto coins for grid bots. Return live prices.`, true) as { coins: unknown[] };
-      setGoalMsg("CALCULATING CONFIGS FOR YOUR GOAL...");
-      const coinList = (scanData.coins || []).map((c: unknown) => {
-        const coin = c as { symbol: string; currentPrice: number; change7d: number; weekHigh: number; weekLow: number; why: string };
-        return `${coin.symbol}: $${coin.currentPrice}, 7d: ${coin.change7d}%, H: $${coin.weekHigh}, L: $${coin.weekLow}, why: ${coin.why}`;
-      }).join("\n");
-      const configData = await callAI(GOAL_CONFIG_PROMPT, `Goal: $${goalUSD} USD in ${goalDays} days.\n\nCoins:\n${coinList}`, false);
-      setGoalResult(configData as Record<string, unknown>);
+      setGoalMsg("SCANNING MARKETS + CALCULATING CONFIGS...");
+      const data = await callAI(
+        GOAL_FINDER_PROMPT,
+        `Goal: $${goalUSD} USD profit in ${goalDays} days. Search for ranging altcoins and calculate grid configs to hit this target.`,
+        true
+      );
+      setGoalResult(data as Record<string, unknown>);
     } catch (e) { setGoalError((e as Error).message); }
     setGoalLoading(false);
   };
@@ -614,7 +612,7 @@ export default function Home() {
                   <div style={{ color: Number(goalResult.requiredDailyROI) > 0.5 ? "#ff4444" : "#00ff87", fontSize: "18px", fontFamily: "'Space Mono',monospace", fontWeight: 700 }}>{Number(goalResult.requiredDailyROI).toFixed(3)}%/day</div>
                 </div>
               </div>
-              {!!(goalResult as any).bestPick && (
+              {goalResult.bestPick && (
                 <div style={{ background: "#0a120a", border: "1px solid #00ff8740", borderRadius: "10px", padding: "12px 16px", marginBottom: "14px", display: "flex", gap: "12px" }}>
                   <span style={{ fontSize: "20px" }}>★</span>
                   <div>
