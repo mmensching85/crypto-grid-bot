@@ -54,38 +54,51 @@ async function callClaude(systemPrompt: string, userMsg: string, useSearch: bool
 }
 
 async function callGemini(systemPrompt: string, userMsg: string, useSearch: boolean) {
-  const geminiModel = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+  // Use Gemini 3.1 Flash for the best balance of reasoning and cost in 2026
+  const geminiModel = process.env.GEMINI_MODEL || "gemini-3.1-flash";
 
   const body: Record<string, unknown> = {
     systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: [{ role: "user", parts: [{ text: userMsg }] }],
-    generationConfig: { maxOutputTokens: 8192, temperature: 0.1 },
+    generationConfig: { 
+      maxOutputTokens: 8192, 
+      temperature: 0.1,
+      // Enables "Thinking" mode for better trading logic/reasoning
+      thinkingBudget: 1024 
+    },
   };
 
   if (useSearch) {
-    // Gemini 1.5 uses googleSearchRetrieval, 2.0 uses googleSearch
-    const isV2 = geminiModel.startsWith("gemini-2");
-    body.tools = isV2
-      ? [{ googleSearch: {} }]
-      : [{ googleSearchRetrieval: { dynamicRetrievalConfig: { mode: "MODE_DYNAMIC", dynamicThreshold: 0.3 } } }];
+    // In 2026, 'googleSearch' is the unified tool for all Gemini models
+    body.tools = [{ googleSearch: {} }];
   } else {
-    (body.generationConfig as Record<string, unknown>).responseMimeType = "application/json";
+    // Ensure the model knows to respond in JSON format
+    (body.generationConfig as any).responseMimeType = "application/json";
   }
 
-  // Note: no stray slash before :generateContent
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${process.env.GEMINI_API_KEY}`,
-    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+    { 
+      method: "POST", 
+      headers: { "Content-Type": "application/json" }, 
+      body: JSON.stringify(body) 
+    }
   );
 
-  const data = await res.json() as Record<string, unknown>;
-  if ((data as { error?: { message?: string } }).error) {
-    throw new Error((data as { error: { message?: string } }).error.message || "Gemini API error");
+  const data = await res.json() as any;
+
+  if (data.error) {
+    throw new Error(data.error.message || "Gemini API error");
   }
 
-  const candidates = (data.candidates as Array<{ content?: { parts?: Array<{ text?: string }> } }>) || [];
-  return (candidates[0]?.content?.parts || []).filter(p => p.text).map(p => p.text || "").join("");
+  const candidates = data.candidates || [];
+  // Correctly extract text parts (ignoring thinking/metadata parts)
+  return candidates[0]?.content?.parts
+    ?.filter((p: any) => p.text)
+    .map((p: any) => p.text)
+    .join("") || "";
 }
+
 
 async function callGrok(systemPrompt: string, userMsg: string, useSearch: boolean) {
   const tools = useSearch
