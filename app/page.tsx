@@ -626,7 +626,7 @@ export default function Home() {
                   <div style={{ color: Number(goalResult.requiredDailyROI) > 0.5 ? "#ff4444" : "#00ff87", fontSize: "18px", fontFamily: "'Space Mono',monospace", fontWeight: 700 }}>{Number(goalResult.requiredDailyROI).toFixed(3)}%/day</div>
                 </div>
               </div>
-              {goalResult.bestPick && (
+              {goalResult?.bestPick != null && (
                 <div style={{ background: "#0a120a", border: "1px solid #00ff8740", borderRadius: "10px", padding: "12px 16px", marginBottom: "14px", display: "flex", gap: "12px" }}>
                   <span style={{ fontSize: "20px" }}>★</span>
                   <div>
