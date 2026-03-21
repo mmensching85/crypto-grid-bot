@@ -250,7 +250,7 @@ const ComparisonTable = ({ configs }: { configs: Result["configs"] }) => {
     { key: "capitalPerGrid", label: "Cap/Grid", fmt: (v: number) => `$${Number(v).toFixed(2)}` },
     { key: "stopLoss", label: "Stop Loss", fmt: (v: number) => `$${fmtPrice(v)}` },
     { key: "takeProfit", label: "Take Profit", fmt: (v: number) => `$${fmtPrice(v)}` },
-  ] as { key: string; label: string; fmt?: (v: unknown) => string; accent?: boolean; feeCol?: boolean }[];
+  ] as { key: keyof Config; label: string; fmt?: (v: unknown) => string; accent?: boolean; feeCol?: boolean }[];
   return (
     <div style={{ background: "#080d08", border: "1px solid #1a2a1a", borderTop: "none", padding: "20px 24px", overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'Space Mono',monospace", fontSize: "11px" }}>
@@ -265,7 +265,7 @@ const ComparisonTable = ({ configs }: { configs: Result["configs"] }) => {
             <tr key={row.key} style={{ background: ri % 2 === 0 ? "#0a0f0a" : "transparent" }}>
               <td style={{ color: "#4a6a4a", padding: "7px 8px", fontSize: "10px" }}>{row.label}</td>
               {labels.map(l => {
-                const cfg = configs[l] as Record<string, unknown>;
+                const cfg = configs[l];
                 const raw = cfg?.[row.key];
                 const val = raw != null ? (row.fmt ? row.fmt(raw as never) : raw) : "—";
                 const color = row.feeCol ? "#ff6644" : row.accent ? lc[l] : "#e8ffe8";
