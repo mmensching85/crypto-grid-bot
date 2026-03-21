@@ -49,11 +49,16 @@ Do TWO searches:
 Return raw JSON only:
 {"goalUSD":number,"goalDays":number,"requiredDailyROI":number,"candidates":[{"rank":number,"coin":string,"currentPrice":number,"why":string,"volatilityProfile":string,"requiredCapital":number,"gridConfig":{"upperPrice":number,"lowerPrice":number,"gridCount":number,"gridType":"arithmetic or geometric","gridSpacing":string,"capitalPerGrid":number,"estDailyROIPct":number,"estDailyProfitUSD":number,"netProfitOverPeriod":number,"estMonthlyFees":number,"healthScore":number,"riskLevel":"Low or Medium or High"},"feasibility":"High or Medium or Low","feasibilityReason":string,"stopLoss":number,"takeProfit":number}],"bestPick":string,"bestPickReason":string,"warnings":[]}
 
-Rules:
+STRICT RULES:
+- NEVER include BTC or ETH — remove them even if search returns them. They require too much capital.
+- Only altcoins under $100 price — lower priced coins need less capital per grid.
 - currentPrice MUST be from search. Training data prices are always wrong.
 - Ranging = 7d change between -15% and +15%, bouncing between support/resistance.
-- Exclude BTC and ETH. Prefer: SOL, SUI, ADA, XRP, DOGE, AVAX, LINK, INJ, NEAR, APT, ARB, PEPE, WIF.
-- Realistic daily net ROI: 0.15-0.3%. requiredCapital = goalUSD / (estDailyROIPct/100 * goalDays).
+- Prefer: SUI, ADA, XRP, DOGE, AVAX, LINK, INJ, NEAR, APT, ARB, PEPE, WIF, BONK, SOL.
+- Realistic daily net ROI: 0.2-0.4% for volatile altcoins. requiredCapital = goalUSD / (estDailyROIPct/100 * goalDays).
+- Use higher estDailyROIPct (0.3-0.4%) for high-volatility coins to reduce required capital.
 - gridCount = round(rangeWidth/3), min 10, max 40. Pionex fee 0.1% round-trip.
-- feasibility: High if capital<$5k and dailyROI<0.4%, Medium <$20k, Low >$20k or >0.5%/day.
-- Rank 1 = best feasibility + lowest capital. bestPick = rank 1 symbol.`;
+- feasibility: High if capital<$3k, Medium $3k-$10k, Low >$10k.
+- Rank by LOWEST required capital first — users want affordable options.
+- bestPick = lowest capital requirement with High feasibility.
+- IMPORTANT: Show a warning if goal requires >$10k for ALL coins suggesting user lower target or extend timeframe.`;
